@@ -19,9 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
         activityCard.className = "activity-card";
 
         const spotsLeft = details.max_participants - details.participants.length;
-        const participantsList = details.participants
-          .map((p) => `<li>${p}</li>`)
-          .join("");
+          const participantsList = details.participants
+            .map((p) => `<li><span>${p}</span><span class="delete-icon" title="Remove" data-activity="${name}" data-email="${p}">&#128465;</span></li>`)
+            .join("");
 
         activityCard.innerHTML = `
           <h4>${name}</h4>
@@ -69,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities(); // Refresh activities list after signup
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
@@ -90,4 +91,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Initialize app
   fetchActivities();
+
+  // Delegate click event for delete icons
+  activitiesList.addEventListener("click", async (event) => {
+    if (event.target.classList.contains("delete-icon")) {
+      const activity = event.target.getAttribute("data-activity");
+      const email = event.target.getAttribute("data-email");
+      if (activity && email) {
+        try {
+          const response = await fetch(`/activities/${encodeURIComponent(activity)}/unregister?email=${encodeURIComponent(email)}`, {
+            method: "DELETE",
+          });
+          if (response.ok) {
+            fetchActivities(); // Refresh list
+          } else {
+            alert("Failed to remove participant.");
+          }
+        } catch (err) {
+          alert("Error removing participant.");
+        }
+      }
+    }
+  });
 });
